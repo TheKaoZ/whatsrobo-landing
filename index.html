@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsRobô</title>
+<meta name="description" content="Disparo de WhatsApp automatizado, rodando no seu computador — sem servidor, sem mensalidade de terceiro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Karla:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F6F5;
+    --surface: #FFFFFF;
+    --surface-2: #EBEEEC;
+    --ink: #12151A;
+    --muted: #5C6470;
+    --line: #DDE2DF;
+    --accent: #0E9C79;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #E1F3EC;
+    --warn: #9A6B00;
+    --warn-soft: #FBF0D6;
+    --warn-line: #E9CE8C;
+    --shadow: 0 1px 2px rgba(18,21,26,.04), 0 8px 24px -12px rgba(18,21,26,.12);
+    --radius: 14px;
+    --font-display: 'Sora', system-ui, sans-serif;
+    --font-body: 'Karla', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10131A;
+      --surface: #171B24;
+      --surface-2: #1E2330;
+      --ink: #EDEFF3;
+      --muted: #8A93A6;
+      --line: #2A3040;
+      --accent: #1FD9B0;
+      --accent-ink: #04211A;
+      --accent-soft: #16352C;
+      --warn: #F0B429;
+      --warn-soft: #2E2712;
+      --warn-line: #4D3F17;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10131A;
+    --surface: #171B24;
+    --surface-2: #1E2330;
+    --ink: #EDEFF3;
+    --muted: #8A93A6;
+    --line: #2A3040;
+    --accent: #1FD9B0;
+    --accent-ink: #04211A;
+    --accent-soft: #16352C;
+    --warn: #F0B429;
+    --warn-soft: #2E2712;
+    --warn-line: #4D3F17;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -16px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    padding: 0 20px;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; color: var(--ink); }
+  a { color: inherit; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* ---- nav ---- */
+  nav.top {
+    max-width: 1120px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding-block: 22px;
+  }
+  .logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+  .logo .dot { width: 9px; height: 9px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .navlinks { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+  .navlinks a:hover { color: var(--ink); }
+  @media (max-width: 640px) { .navlinks { display: none; } }
+  .btn {
+    font-family: var(--font-display); font-weight: 600; font-size: 14px;
+    padding: 10px 18px; border-radius: 10px; border: 1px solid transparent;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-ghost { border-color: var(--line); color: var(--ink); background: transparent; }
+
+  /* ---- hero ---- */
+  .hero {
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px;
+    padding-block: 28px 60px; align-items: center;
+  }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-block: 12px 40px; } }
+  .hero h1 { font-size: clamp(32px, 4.6vw, 50px); line-height: 1.08; letter-spacing: -.01em; margin-top: 16px; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p.lead { color: var(--muted); font-size: 17px; max-width: 46ch; margin-top: 18px; }
+  .hero-cta { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+  .disclaimer {
+    margin-top: 22px; display: flex; gap: 10px; align-items: flex-start;
+    font-size: 12.5px; color: var(--muted); max-width: 44ch;
+  }
+  .disclaimer .flag { color: var(--warn); flex-shrink: 0; }
+
+  /* ---- log panel ---- */
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+  }
+  .panel-head .who { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .panel-body { padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; }
+  .log-line { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); align-items: baseline; }
+  .log-line:last-child { border-bottom: none; }
+  .log-line .ok { color: var(--accent); }
+  .log-line .name { color: var(--ink); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-line .tag { color: var(--muted); font-size: 11px; }
+  .progress-row { margin-top: 12px; }
+  .progress-track { height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; width: 62%; background: var(--accent); border-radius: 4px; }
+  .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* ---- stats strip ---- */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    margin-block: 8px 64px;
+  }
+  @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } }
+  .stat { background: var(--surface); padding: 22px 24px; }
+  .stat .n { font-family: var(--font-mono); font-size: 30px; font-weight: 600; color: var(--accent); }
+  .stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ---- section heads ---- */
+  .section-head { max-width: 60ch; margin-bottom: 36px; }
+  .section-head h2 { font-size: clamp(24px, 3vw, 32px); margin-top: 10px; }
+  .section-head p { color: var(--muted); margin-top: 10px; font-size: 15px; }
+  section { padding-block: 20px; }
+
+  /* ---- features ---- */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 860px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .features { grid-template-columns: 1fr; } }
+  .feature {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .feature .ico {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+  }
+  .feature h3 { font-size: 15.5px; font-weight: 600; }
+  .feature p { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+  /* ---- how it works ---- */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: step; }
+  @media (max-width: 780px) { .flow { grid-template-columns: 1fr 1fr; gap: 24px; } }
+  .flow-step { position: relative; padding: 0 20px 0 0; border-right: 1px dashed var(--line); }
+  .flow-step:last-child { border-right: none; }
+  @media (max-width: 780px) { .flow-step { border-right: none; } }
+  .flow-step .num {
+    font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+    width: 26px; height: 26px; border: 1px solid var(--accent); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+  }
+  .flow-step h3 { font-size: 15px; font-weight: 600; }
+  .flow-step p { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  /* ---- honesty ---- */
+  .honesty {
+    background: var(--warn-soft); border: 1px solid var(--warn-line); border-radius: var(--radius);
+    padding: 28px 30px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: flex-start;
+  }
+  @media (max-width: 560px) { .honesty { grid-template-columns: 1fr; } }
+  .honesty .badge {
+    font-family: var(--font-mono); font-size: 20px; color: var(--warn);
+    width: 40px; height: 40px; border: 1px solid var(--warn-line); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; background: var(--surface);
+  }
+  .honesty h3 { font-size: 16px; font-weight: 600; }
+  .honesty p { font-size: 14px; color: var(--ink); margin-top: 8px; max-width: 62ch; }
+  .honesty .quote {
+    margin-top: 12px; font-family: var(--font-mono); font-size: 12.5px; color: var(--warn);
+    background: var(--surface); border: 1px solid var(--warn-line); border-radius: 8px; padding: 10px 12px;
+  }
+
+  /* ---- pricing ---- */
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 860px) { .plans { grid-template-columns: 1fr; max-width: 420px; margin-inline: auto; } }
+  .plan {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 26px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .plan.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); position: relative; }
+  .plan.featured::before {
+    content: 'MAIS ESCOLHIDO'; position: absolute; top: -11px; left: 26px;
+    background: var(--accent); color: var(--accent-ink); font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: .06em; padding: 3px 8px; border-radius: 5px;
+  }
+  .plan .name { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .plan .price { font-family: var(--font-mono); font-size: 28px; font-weight: 600; display: flex; align-items: baseline; gap: 6px; }
+  .plan .price small { font-family: var(--font-body); font-size: 12.5px; color: var(--muted); font-weight: 400; }
+  .plan ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+  .plan li { font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; }
+  .plan li::before { content: '✓'; color: var(--accent); flex-shrink: 0; font-weight: 700; }
+  .plan .btn { justify-content: center; margin-top: auto; }
+
+  /* ---- footer cta ---- */
+  .footer-cta {
+    text-align: center; padding-block: 64px 40px; border-top: 1px solid var(--line); margin-top: 40px;
+  }
+  .footer-cta h2 { font-size: clamp(24px, 3.4vw, 34px); }
+  .footer-cta p { color: var(--muted); margin-top: 12px; }
+  .footer-cta .hero-cta { justify-content: center; }
+  footer.bottom {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    padding-block: 22px 36px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+
+<nav class="top">
+  <div class="logo"><span class="dot"></span>WhatsRobô</div>
+  <div class="navlinks">
+    <a href="#recursos">Recursos</a>
+    <a href="#como-funciona">Como funciona</a>
+    <a href="#planos">Planos</a>
+  </div>
+  <a class="btn btn-primary" href="#planos">Baixar agora</a>
+</nav>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Desktop · Windows · sem servidor</span>
+      <h1>Seu disparo de WhatsApp, rodando <em>no seu computador</em>.</h1>
+      <p class="lead">O WhatsRobô conecta números reais do WhatsApp Web e manda mensagens em fila, com delay humano entre envios, rodízio de templates e histórico de cada disparo — sem mensalidade de servidor, sem seus contatos saindo da sua máquina.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#planos">Baixar agora</a>
+        <a class="btn btn-ghost" href="#como-funciona">Ver como funciona</a>
+      </div>
+      <div class="disclaimer">
+        <span class="flag">⚠</span>
+        <span>Automação de WhatsApp viola os Termos de Uso da Meta e pode levar o número a ser banido. Mostramos esse aviso dentro do próprio app — preferimos isso a esconder o risco de você.</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="who"><span class="live-dot"></span>Número 1 — Conectado</span>
+        <span class="who mono">camp_lista_fria</span>
+      </div>
+      <div class="panel-body">
+        <div class="log-line"><span class="ok">✅</span><span class="name">Adeliana</span><span class="tag">lista fria 4</span></div>
+        <div class="log-line"><span class="ok">✅</span><span class="name">Ademar</span><span class="tag">lista fria 4</span></div>
+        <div class="log-line"><span class="ok">✅</span><span class="name">Ailton</span><span class="tag">lista fria 4</span></div>
+        <div class="log-line"><span class="ok">✅</span><span class="name">Alaíde</span><span class="tag">lista fria 4</span></div>
+        <div class="log-line"><span style="color:var(--muted)">…</span><span class="name" style="color:var(--muted)">Alessandra</span><span class="tag">aguardando 138s</span></div>
+        <div class="progress-row">
+          <div class="progress-labels"><span>14 / 22 enviados</span><span>0 falhas</span></div>
+          <div class="progress-track"><div class="progress-fill"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><div class="n mono">150/dia</div><div class="l">limite diário configurável, por número</div></div>
+    <div class="stat"><div class="n mono">120–240s</div><div class="l">delay aleatório entre envios, anti-ban</div></div>
+    <div class="stat"><div class="n mono">2–∞</div><div class="l">números simultâneos, conforme o plano</div></div>
+  </div>
+
+  <section id="recursos">
+    <div class="section-head">
+      <span class="eyebrow">Recursos</span>
+      <h2>Feito pra quem manda a mesma mensagem centenas de vezes.</h2>
+      <p>Cada recurso resolve um jeito específico de disparo dar errado — número banido, mídia perdida, mensagem repetitiva, contato sem histórico.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><div class="ico">N</div><h3>Multi-número</h3><p>Conecte vários WhatsApp ao mesmo tempo e distribua o disparo entre eles automaticamente.</p></div>
+      <div class="feature"><div class="ico">⟳</div><h3>Templates em rodízio</h3><p>Alterne entre vários textos por contato — reduz o padrão repetitivo que o WhatsApp usa pra detectar spam.</p></div>
+      <div class="feature"><div class="ico">📎</div><h3>Mídia sempre disponível</h3><p>A imagem ou vídeo anexado é copiado pro app na hora — apagar o arquivo original depois nunca quebra o disparo.</p></div>
+      <div class="feature"><div class="ico">⏱</div><h3>Delay humano</h3><p>Intervalo aleatório entre mensagens, configurável, pra imitar o ritmo de uma pessoa digitando.</p></div>
+      <div class="feature"><div class="ico">↺</div><h3>Reenvio de falhas</h3><p>O histórico marca quem não recebeu e deixa reenviar só pra esses contatos, sem repetir os que já foram.</p></div>
+      <div class="feature"><div class="ico">#</div><h3>Contatos com tag</h3><p>Organize sua lista por tag e dispare só pro segmento certo — sem CSV bagunçado, sem planilha paralela.</p></div>
+    </div>
+  </section>
+
+  <section id="como-funciona">
+    <div class="section-head">
+      <span class="eyebrow">Como funciona</span>
+      <h2>Quatro telas, nessa ordem, e o disparo já está rodando.</h2>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><div class="num">1</div><h3>Conexão</h3><p>Escaneia o QR Code do WhatsApp Web — o mesmo que você já usa no navegador.</p></div>
+      <div class="flow-step"><div class="num">2</div><h3>Contatos</h3><p>Importa um CSV ou cadastra na mão, com tag e telefone com DDD.</p></div>
+      <div class="flow-step"><div class="num">3</div><h3>Mensagem</h3><p>Monta o texto com variáveis ({nome}, {cidade}) e anexa mídia se quiser.</p></div>
+      <div class="flow-step"><div class="num">4</div><h3>Disparo</h3><p>Escolhe a lista, define o delay e o limite diário, e acompanha o log em tempo real.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="honesty">
+      <div class="badge">⚠</div>
+      <div>
+        <h3>Automação de WhatsApp tem risco — e não escondemos isso.</h3>
+        <p>Todo disparo passa por essa mesma mensagem dentro do app antes de começar. É o mesmo texto, palavra por palavra — porque achamos que você decide melhor sabendo do risco do que sem saber.</p>
+        <div class="quote">"Automação viola o ToS do WhatsApp e pode banir o número. Use chips de teste."</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="planos">
+    <div class="section-head">
+      <span class="eyebrow">Planos</span>
+      <h2>Preço por quantos números você precisa disparar ao mesmo tempo.</h2>
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="name">Básico</div>
+        <div class="price">R$ 47<small>/mês</small></div>
+        <ul>
+          <li>Até 2 números simultâneos</li>
+          <li>Templates com variáveis</li>
+          <li>Histórico e reenvio de falhas</li>
+          <li>Delay e limite diário configuráveis</li>
+        </ul>
+        <a class="btn btn-ghost">Assinar Básico</a>
+      </div>
+      <div class="plan featured">
+        <div class="name">Pro</div>
+        <div class="price">R$ 97<small>/mês</small></div>
+        <ul>
+          <li>Números ilimitados</li>
+          <li>Rodízio de templates</li>
+          <li>Tags e segmentação de contatos</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <a class="btn btn-primary">Assinar Pro</a>
+      </div>
+      <div class="plan">
+        <div class="name">VIP</div>
+        <div class="price">sob consulta</div>
+        <ul>
+          <li>Tudo do Pro</li>
+          <li>Onboarding acompanhado</li>
+          <li>Ajustes sob medida no fluxo</li>
+          <li>Prioridade em recursos novos</li>
+        </ul>
+        <a class="btn btn-ghost">Falar sobre VIP</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-cta">
+    <h2>Seu primeiro disparo pode estar rodando em 10 minutos.</h2>
+    <p>Baixa, escaneia o QR Code, importa sua lista — sem servidor pra configurar.</p>
+    <div class="hero-cta"><a class="btn btn-primary" href="#planos">Baixar agora</a></div>
+  </div>
+
+  <footer class="bottom">
+    <span>WhatsRobô — automação de disparo para WhatsApp Web.</span>
+    <span class="mono">v0.6.9</span>
+  </footer>
+</div>
+
+</body>
+</html>
